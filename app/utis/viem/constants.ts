@@ -1,5 +1,6 @@
 import { createPublicClient, http, erc20Abi } from 'viem';
-import { base, optimism, arbitrum } from 'viem/chains';
+import { base, optimism, arbitrum, mainnet } from 'viem/chains';
+import { normalize } from 'viem/ens';
 
 const getClient = (network: string) => {
   let client = createPublicClient({
@@ -9,8 +10,18 @@ const getClient = (network: string) => {
   return client;
 };
 
+const getMainnetClient = () => {
+  let client = createPublicClient({
+    chain: mainnet,
+    transport: http(), //http(getAlchemyRpc(network)),
+  });
+  return client;
+};
+
 const getViemNetwork = (network: string) => {
   switch (network) {
+    case 'mainnet':
+      return mainnet;
     case 'base':
       return base;
     case 'optimism':
@@ -20,6 +31,16 @@ const getViemNetwork = (network: string) => {
     default:
       throw new Error(`Unsupported network: ${network}`);
   }
+};
+
+export const getEnsAddress = async (
+  paramAddress: string
+): Promise<any> => {
+  let client = getMainnetClient();
+  const ensAddress = await client.getEnsAddress({
+    name: normalize(paramAddress),
+  });
+  return ensAddress;
 };
 
 export const getErc20Allowance = async (

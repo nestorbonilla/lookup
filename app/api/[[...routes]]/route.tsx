@@ -6,16 +6,14 @@ import { devtools } from 'frog/dev'
 import { neynar, type NeynarVariables } from 'frog/middlewares';
 import { handle } from 'frog/next';
 import { serveStatic } from 'frog/serve-static';
-import neynarClient, { getEipChainId } from '@/app/utis/neynar/client';
+import neynarClient from '@/app/utis/neynar/client';
 import {
   Cast,
-  Channel,
-  ChannelType,
-  ReactionType,
   ValidateFrameActionResponse,
 } from '@neynar/nodejs-sdk/build/neynar-api/v2';
-import { Address, erc20Abi, formatUnits, isAddress } from 'viem';
-import { getBalance, getEthCode, getNetworkId, getTxCount } from '@/app/utis/chainbase/constants';
+import { isAddress } from 'viem';
+import { getBalance, getEthCode, getNetworkId, getQueryResults, QueryResult } from '@/app/utis/chainbase/constants';
+import { getEnsAddress } from '@/app/utis/viem/constants';
 
 interface AnalysisResult {
   valid: boolean;
@@ -201,22 +199,30 @@ app.frame(
       if (buttonValue == 'verify') {
         let tokenId: number | null = null;
         let userAddress: string | null = null;
+        let balance: number | null = 0;
+        let result: QueryResult | null = null;
+        let paramAddress: string | null = null;
 
         switch (paramType) {
           case 'eoa-address':
-            let balance = await getBalance(parameter!, networkId);
-            let txCount = await getTxCount(parameter!, networkId);
-            frameText = `The balance of this address is ${balance}, it has ${txCount} transactions.`;
+            balance = await getBalance(parameter!, networkId!);
+            result = await getQueryResults('690032', parameter!);
+            frameText = `The balance of this address is ${balance}, it has ${result?.txCount} transactions, and the last one was ${result?.lastTxTimestamp}`;
             break;
           case 'contract-address':
-            // textFrame = `This is a contract address.`;
+            result = await getQueryResults('690033', parameter!);
+            frameText = `This is an ${result?.isErc20 ? 'ERC20' : result?.isErc721 ? 'ERC721' : 'Custom'} contract. It has ${result?.txCount} transactions, and was deployed from ${result?.fromAddress} at ${result?.blockTimestamp}.`;
             break;
           case 'tx-hash':
-            // const txData = await getTransactionData(parameter, networkId);
-            frameText = `This is a transaction hash.`;
+            result = await getQueryResults('690035', parameter!);
+            frameText = `This transaction with hash ${result?.hash} was an interaction from ${result?.fromAddress} to ${result?.toAddress} that used ${result?.gas} gas and transferred ${result?.value} wei. It was mined at ${result?.blockTimestamp}.`;
             break;
           case 'ens-name':
-            frameText = `This is an ENS name.`;
+            paramAddress = await getEnsAddress(parameter!);
+            console.log('paramAddress:', paramAddress);
+          balance = await getBalance(paramAddress!, networkId!);
+          result = await getQueryResults('690032', paramAddress!);
+            frameText = `The balance of this ENS is ${balance}, it has ${result?.txCount} transactions, and the last one was ${result?.lastTxTimestamp}`;
             break;
           default:
             break;
@@ -250,6 +256,8 @@ app.frame(
             <Spacer size="20" />
             <Text color={'black'} size="20">
               Parameter: {parameter}
+            </Text>
+            <Text color={'black'} size="20">
               Parameter Type: {paramType}
             </Text>
             <Spacer size="10" />
