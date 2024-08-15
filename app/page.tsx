@@ -38,20 +38,20 @@ const networks = [
 
 const paramTypes = [
   {
-    value: "eoa",
+    value: "eoa-address",
     label: "EOA",
   },
   {
-    value: "smart-contract",
-    label: "Smart Contract",
+    value: "contract-address",
+    label: "Contract Address",
   },
   {
-    value: "ens",
-    label: "ENS",
+    value: "ens-name",
+    label: "ENS Name",
   },
   {
-    value: "tx",
-    label: "Transaction",
+    value: "tx-hash",
+    label: "Transaction Hash",
   }
 ];
 
