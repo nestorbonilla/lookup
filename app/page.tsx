@@ -1,118 +1,190 @@
-import { getFrameMetadata } from 'frog/next'
-import type { Metadata } from 'next'
+'use client'
+
 import Image from 'next/image'
+import { postComposerCreateCastActionMessage } from 'frog/next'
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useState } from 'react'
+import { cn } from "@/lib/utils"
+import { Check, ChevronsUpDown } from "lucide-react"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
-import styles from './page.module.css'
-
-export async function generateMetadata(): Promise<Metadata> {
-  const frameTags = await getFrameMetadata(
-    `${process.env.VERCEL_URL || 'http://localhost:3000'}/api`,
-  )
-  return {
-    other: frameTags,
+const networks = [
+  {
+    value: "base",
+    label: "Base",
+  },
+  {
+    value: "optimism",
+    label: "Optimism",
+  },
+  {
+    value: "arbitrum",
+    label: "Arbitrum",
   }
-}
+];
 
-export default function Home() {
+const paramTypes = [
+  {
+    value: "eoa",
+    label: "EOA",
+  },
+  {
+    value: "smart-contract",
+    label: "Smart Contract",
+  },
+  {
+    value: "ens",
+    label: "ENS",
+  },
+  {
+    value: "tx",
+    label: "Transaction",
+  }
+];
+
+export default function Home() { 
+  
+  const [networkOpen, setNetworkOpen] = useState(false)
+  const [networkValue, setNetworkValue] = useState("")
+  
+  const [paramTypeOpen, setParamTypeOpen] = useState(false)
+  const [paramTypevalue, setParamTypeValue] = useState("")
+  
+  const [param, setParam] = useState("");
+  
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <p>
-            Get started by editing&nbsp;
-            <code className={styles.code}>app/page.tsx</code>
-          </p>
-          <p>
-            Head to{' '}
-            <a
-              href="/api/dev"
-              style={{ display: 'inline', fontWeight: 'semibold' }}
-            >
-              <code className={styles.code}>localhost:3000/api</code>
-            </a>{' '}
-            for your frame endpoint.
-          </p>
-        </div>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+    <main >
+      <div >
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle className="text-2xl">Lookup Action</CardTitle>
+            <CardDescription>Lookup a param on any EVM network.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="email">Network</Label>
+              <Popover open={networkOpen} onOpenChange={setNetworkOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={networkOpen}
+                    className="w-[200px] justify-between"
+                  >
+                    {networkValue
+                      ? networks.find((network) => network.value === networkValue)?.label
+                      : "Select Network..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[200px] p-0">
+                  <Command>
+                    <CommandList>
+                      <CommandEmpty>No network found.</CommandEmpty>
+                      <CommandGroup>
+                        {networks.map((network) => (
+                          <CommandItem
+                            key={network.value}
+                            value={network.value}
+                            onSelect={(currentValue) => {
+                              setNetworkValue(currentValue === networkValue ? "" : currentValue)
+                              setNetworkOpen(false)
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                networkValue === network.value ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {network.label}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="email">Param Type</Label>
+              <Popover open={paramTypeOpen} onOpenChange={setParamTypeOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={paramTypeOpen}
+                    className="w-[200px] justify-between"
+                  >
+                    {paramTypevalue
+                      ? paramTypes.find((paramType) => paramType.value === paramTypevalue)?.label
+                      : "Select Param Type..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[200px] p-0">
+                  <Command>
+                    <CommandList>
+                      <CommandEmpty>No param type found.</CommandEmpty>
+                      <CommandGroup>
+                        {paramTypes.map((paramType) => (
+                          <CommandItem
+                            key={paramType.value}
+                            value={paramType.value}
+                            onSelect={(currentValue) => {
+                              setParamTypeValue(currentValue === paramTypevalue ? "" : currentValue)
+                              setParamTypeOpen(false)
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                paramTypevalue === paramType.value ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {paramType.label}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="param">Parameter</Label>
+              <Input
+                id="param"
+                value={param} 
+                onChange={(event) => setParam(event.target.value)}
+                required />
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button className="w-full" onClick={() => {
+              console.log("Button clicked");
+              postComposerCreateCastActionMessage({
+                text: "Testing!",
+                embeds: [`${process.env.NEXT_PUBLIC_APP_URL}/api/frame-analyze/${networkValue}/${paramTypevalue}/${param}`]
+              })}
+            }>LookUp</Button>
+          </CardFooter>
+        </Card>
       </div>
     </main>
   )

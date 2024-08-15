@@ -1,6 +1,6 @@
 /** @jsxImportSource frog/jsx */
 
-import { Button, FrameContext, Frog, TextInput } from 'frog';
+import { Button, FrameContext, Frog } from 'frog';
 import { Box, Heading, Text, VStack, Spacer, vars } from '@/app/utis/frog/ui';
 import { devtools } from 'frog/dev'
 import { neynar, type NeynarVariables } from 'frog/middlewares';
@@ -80,6 +80,24 @@ const statusMessage = {
     [FrameAnalyzeResult.CAST_ERROR]: `${ApiRoute.FRAME_ANALYZE} => FRAME ACTION IS INVALID`,
   },
 };
+
+app.composerAction(
+  '/',
+  (c) => {
+    return c.res({
+      title: 'LookUp Composer Action',
+      url: `${process.env.NEXT_PUBLIC_APP_URL}` 
+    })
+  },
+  {
+    /* Name of the action – 14 characters max. */
+    name: 'Some Composer Action',
+    /* Description of the action – 20 characters max. */
+    description: 'Cool Composer Action',
+    icon: 'image',
+    imageUrl: 'https://frog.fm/logo-light.svg',
+  }
+);
 
 app.hono.post('/hook-analyze', async (c) => {
   try {
@@ -272,7 +290,7 @@ app.frame(
   }
 );
 
-export const isAnalyzeCast = async (command: string, param: string, network: string): Promise<AnalysisResult> => {
+const isAnalyzeCast = async (command: string, param: string, network: string): Promise<AnalysisResult> => {
 
   if (command !== '@lookup' || !param || !network) {
     return { valid: false, paramType: 'invalid' };
