@@ -66,8 +66,8 @@ export default function Home() {
   const [param, setParam] = useState("");
   
   return (
-    <main >
-      <div >
+    <main className="flex min-h-screen flex-col items-center justify-center"> {/* Add these classes */}
+      <div>
         <Card className="w-full max-w-sm">
           <CardHeader>
             <CardTitle className="text-2xl">Lookup Action</CardTitle>
@@ -82,7 +82,7 @@ export default function Home() {
                     variant="outline"
                     role="combobox"
                     aria-expanded={networkOpen}
-                    className="w-[200px] justify-between"
+                    className="w-full justify-between"
                   >
                     {networkValue
                       ? networks.find((network) => network.value === networkValue)?.label
@@ -127,7 +127,7 @@ export default function Home() {
                     variant="outline"
                     role="combobox"
                     aria-expanded={paramTypeOpen}
-                    className="w-[200px] justify-between"
+                    className="w-full justify-between"
                   >
                     {paramTypevalue
                       ? paramTypes.find((paramType) => paramType.value === paramTypevalue)?.label
