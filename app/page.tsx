@@ -20,6 +20,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import Image from 'next/image'
 
 const networks = [
   {
@@ -88,10 +89,13 @@ switch (paramTypevalue) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center">
       <div>
+        <div className="flex flex-col items-center m-3">
+          <Image src="/logo-light.svg" alt="LookUp logo" width={100} height={100} />          
+        </div>
         <Card className="w-screen max-w-md">
-          <CardHeader>
-            <CardTitle className="text-2xl">Lookup Action</CardTitle>
-            <CardDescription>Lookup a param on any EVM network.</CardDescription>
+          <CardHeader className='flex flex-col items-center'>
+            <CardTitle className="text-2xl">LookUp Analyzer</CardTitle>
+            <CardDescription>Lookup an EOA, contract, tx or ENS on any EVM network. This project works as a Farcaster Composer Action.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
             <div className="grid gap-2">
