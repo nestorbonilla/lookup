@@ -38,19 +38,19 @@ const networks = [
 
 const paramTypes = [
   {
-    value: "eoa-address",
+    value: "eoa",
     label: "EOA",
   },
   {
-    value: "contract-address",
+    value: "contract",
     label: "Contract Address",
   },
   {
-    value: "ens-name",
+    value: "ens",
     label: "ENS Name",
   },
   {
-    value: "tx-hash",
+    value: "tx",
     label: "Transaction Hash",
   }
 ];
@@ -65,10 +65,30 @@ export default function Home() {
   
   const [param, setParam] = useState("");
   
+  let frameText = '';
+
+switch (paramTypevalue) {
+    case 'eoa':
+        frameText = `The details of the EOA ${param} on ${networkValue} network are:`;
+        break;
+    case 'contract':
+        frameText = `The details of the contract ${param} on ${networkValue} network are:`;
+        break;
+    case 'tx':
+        frameText = `The details of the transaction ${param} on ${networkValue} network are:`;
+        break;
+    case 'ens':
+        frameText = `The details of the ENS ${param} on ${networkValue} network are:`;
+        break;
+    default:
+        frameText = 'Invalid parameter type.'; // Handle unexpected cases
+        break;
+}
+  
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center"> {/* Add these classes */}
+    <main className="flex min-h-screen flex-col items-center justify-center">
       <div>
-        <Card className="w-full max-w-sm">
+        <Card className="w-screen max-w-md">
           <CardHeader>
             <CardTitle className="text-2xl">Lookup Action</CardTitle>
             <CardDescription>Lookup a param on any EVM network.</CardDescription>
@@ -175,9 +195,8 @@ export default function Home() {
           </CardContent>
           <CardFooter>
             <Button className="w-full" onClick={() => {
-              console.log("Button clicked");
               postComposerCreateCastActionMessage({
-                text: "Testing!",
+                text: `${frameText}`,
                 embeds: [`${process.env.NEXT_PUBLIC_APP_URL}/api/frame-analyze/${networkValue}/${paramTypevalue}/${param}`]
               })}
             }>LookUp</Button>

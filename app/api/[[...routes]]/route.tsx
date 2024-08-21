@@ -222,20 +222,20 @@ app.frame(
         let paramAddress: string | null = null;
 
         switch (paramType) {
-          case 'eoa-address':
+          case 'eoa':
             balance = await getBalance(parameter!, networkId!);
             result = await getQueryResults('690032', parameter!);
-            frameText = `The balance of this address is ${balance}, it has ${result?.txCount} transactions, and the last one was ${result?.lastTxTimestamp}`;
+            frameText = `Its balance is ${balance} ETH, it has ${result?.txCount} txs, and the last one was ${result?.lastTxTimestamp}`;
             break;
-          case 'contract-address':
+          case 'contract':
             result = await getQueryResults('690033', parameter!);
             frameText = `This is an ${result?.isErc20 ? 'ERC20' : result?.isErc721 ? 'ERC721' : 'Custom'} contract. It has ${result?.txCount} transactions, and was deployed from ${result?.fromAddress} at ${result?.blockTimestamp}.`;
             break;
-          case 'tx-hash':
+          case 'tx':
             result = await getQueryResults('690035', parameter!);
             frameText = `This transaction with hash ${result?.hash} was an interaction from ${result?.fromAddress} to ${result?.toAddress} that used ${result?.gas} gas and transferred ${result?.value} wei. It was mined at ${result?.blockTimestamp}.`;
             break;
-          case 'ens-name':
+          case 'ens':
             paramAddress = await getEnsAddress(parameter!);
             console.log('paramAddress:', paramAddress);
           balance = await getBalance(paramAddress!, networkId!);
@@ -259,30 +259,35 @@ app.frame(
     return c.res({
       title: 'LookUp - Analyzer',
       image: (
-        <Box
-          grow
-          alignHorizontal="center"
-          backgroundColor="background"
-          padding="32"
-          borderStyle="solid"
-          borderRadius="8"
-          borderWidth="4"
-          borderColor="yellow"
-        >
-          <VStack gap="4">
-            <Heading color={'black'}>@LookUp</Heading>
-            <Spacer size="20" />
-            <Text color={'black'} size="20">
-              Parameter: {parameter}
-            </Text>
-            <Text color={'black'} size="20">
-              Parameter Type: {paramType}
-            </Text>
-            <Spacer size="10" />
-            <Text color={'black'} size="18">
-              {frameText}
-            </Text>
-          </VStack>
+        <Box grow flexDirection="row" gap="1" background="border">
+          <Box flex="1" background="box" />
+          <Box flex="10" background="box" flexDirection="column" height="100%" alignVertical="center" gap="1" backgroundColor="border">
+            <Box flex="1" background="box" />
+            <Box flex="10" background="box" flexDirection="column" alignItems="center" gap="1">
+              <Box flex="2" alignVertical="center" alignHorizontal="center">
+                <Heading>
+                  <Text size="18">@LookUp Analyzer</Text>
+                </Heading>
+              </Box>
+              <Box flex="10" background="box" alignItems="center" flexDirection="column" gap="1">
+                <VStack gap="1" marginLeft="10" marginRight="10">
+                  <Text size="14" align="left">Param: {parameter}</Text>
+                  <Text size="14" align="left">Type: {paramType}</Text>
+                  <Spacer size="24" />
+                  <Text size="14" align="left">{frameText}</Text>  
+                </VStack>                
+              </Box>
+            </Box>
+            <Box flex="1" background="box" />
+          </Box>
+          <Box flex="4" background="box" flexDirection="column" height="100%" alignVertical="center" gap="1" backgroundColor="border">
+            <Box flex="1" background="box" />
+            <Box flex="10" backgroundColor={`${network == "base" ? "base" : network === "optimism" ? "optimism" : "arbitrum"}`}>
+              {/* <Text size="14" color="white" align="right">{network}</Text> */}
+            </Box>
+            <Box flex="1" background="box" />
+          </Box>
+          <Box flex="1" background="box" />
         </Box>
       ),
       intents: dynamicIntents,
@@ -303,16 +308,16 @@ const isAnalyzeCast = async (command: string, param: string, network: string): P
 
   try {
     if (param.endsWith('.eth')) {
-      return { valid: false, paramType: 'ens-name' };
+      return { valid: false, paramType: 'ens' };
     } else {
       if (param.startsWith('0x')) {
         if (param.length === 66) {
-          return { valid: false, paramType: 'tx-hash' };
+          return { valid: false, paramType: 'tx' };
         } else if (isAddress(param)) {
           const code = await getEthCode(param, network);
           return { 
             valid: code !== '0x', 
-            paramType: code === '0x' ? 'eoa-address' : 'contract-address' 
+            paramType: code === '0x' ? 'eoa' : 'contract' 
           };
         }
       }
