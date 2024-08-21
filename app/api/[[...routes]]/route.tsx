@@ -235,9 +235,8 @@ app.frame(
             break;
           case 'ens':
             paramAddress = await getEnsAddress(parameter!);
-            console.log('paramAddress:', paramAddress);
-          balance = await getBalance(paramAddress!, networkId!);
-          result = await getQueryResults('690032', paramAddress!);
+            balance = await getBalance(paramAddress!, networkId!);
+            result = await getQueryResults('690032', paramAddress!);
             frameText = `The balance of this ENS is ${balance}, it has ${result?.txCount} transactions, and the last one was ${result?.lastTxTimestamp}`;
             break;
           default:

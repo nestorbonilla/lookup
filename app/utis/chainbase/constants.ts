@@ -70,11 +70,10 @@ export const getBalance = async (
       console.error(`Error fetching balance for address ${address}:`, data.error);
       return null;
     }
-    console.log(data.result);
+    
     let balanceInHex = data.result;
     let balanceInWei = BigInt(hexToNumber(balanceInHex));
     let balance = Number(Number(formatEther(balanceInWei)).toFixed(4));
-    console.log(balance);
     
     return balance;
   } catch (err) {
@@ -107,11 +106,8 @@ export const getTxCount = async (
       console.error(`Error fetching tx count for address ${address}:`, data.error);
       return null;
     }
-    console.log(data.result);
     let txCountInHex = data.result;
-    let txCount = hexToNumber(txCountInHex);
-    console.log(txCount);
-    
+    let txCount = hexToNumber(txCountInHex);    
     return txCount;
   } catch (err) {
     console.error(`Error fetching tx count for address ${address}:`, err);
