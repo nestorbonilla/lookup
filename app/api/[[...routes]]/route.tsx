@@ -25,11 +25,11 @@ const app = new Frog({
   assetsPath: '/',
   basePath: '/api',
   ui: { vars },
-  origin: process.env.APP_URL,
+  origin: process.env.NEXT_PUBLIC_APP_URL,
   imageOptions: {
     format: 'png',
   },
-  verify: process.env.NODE_ENV === 'production', // leave it as is, if not issue with frog local debug tool
+  verify: process.env.NODE_ENV === 'production',
 });
 
 const neynarMiddleware = neynar({
@@ -90,12 +90,10 @@ app.composerAction(
     })
   },
   {
-    /* Name of the action – 14 characters max. */
-    name: 'Some Composer Action',
-    /* Description of the action – 20 characters max. */
-    description: 'Cool Composer Action',
+    name: 'LookUp Composer Action',
+    description: 'Check details of an EOA, Contract, Transaction, or ENS name',
     icon: 'image',
-    imageUrl: 'https://frog.fm/logo-light.svg',
+    imageUrl: `${process.env.NEXT_PUBLIC_APP_URL}/logo-light.svg`,
   }
 );
 
