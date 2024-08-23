@@ -253,36 +253,7 @@ app.frame(
     }
     return c.res({
       title: 'LookUp - Analyzer',
-      image: (
-        <Box grow flexDirection="row" gap="1" background="border">
-          <Box flex="1" background="box" />
-          <Box flex="10" background="box" flexDirection="column" height="100%" alignVertical="center" gap="1" backgroundColor="border">
-            <Box flex="1" background="box" />
-            <Box flex="10" background="box" flexDirection="column" alignItems="center" gap="1">
-              <Box flex="2" alignVertical="center" alignHorizontal="center">
-                <Heading>
-                  <Text size="18">@LookUp Analyzer</Text>
-                </Heading>
-              </Box>
-              <Box flex="10" background="box" alignItems="center" flexDirection="column" gap="1">
-                <VStack gap="1" marginLeft="10" marginRight="10">
-                  <Text size="14" align="left">Param: {parameter}</Text>
-                  <Text size="14" align="left">Type: {paramType}</Text>
-                  <Spacer size="24" />
-                  <Text size="14" align="left">{frameText}</Text>
-                </VStack>                
-              </Box>
-            </Box>
-            <Box flex="1" background="box" />
-          </Box>
-          <Box flex="4" background="box" flexDirection="column" height="100%" alignVertical="center" gap="1" backgroundColor="border">
-            <Box flex="1" background="box" />
-            <Box flex="10" backgroundColor={`${network == "base" ? "base" : network === "optimism" ? "optimism" : "arbitrum"}`} />
-            <Box flex="1" background="box" />
-          </Box>
-          <Box flex="1" background="box" />
-        </Box>
-      ),
+      image: `/img/${network}/${paramType}/${parameter}/${frameText}`,
       intents: dynamicIntents,
     });
   }
@@ -323,6 +294,49 @@ const isAnalyzeCast = async (command: string, param: string, network: string): P
     return { valid: false, paramType: 'invalid' };
   }
 };
+
+app.image('/img/:network/:type/:param/:description', (c) => {
+  const network = c.req.param('network');
+  const type = c.req.param('type');
+  const param = c.req.param('param');
+  const description = c.req.param('description');
+  return c.res({
+    headers: {
+      'Cache-Control': 'public, max-age=0',
+    },
+    image: 
+    <Box grow flexDirection="row" gap="1" background="border">
+      <Box flex="1" background="box" />
+      <Box flex="10" background="box" flexDirection="column" height="100%" alignVertical="center" gap="1" backgroundColor="border">
+        <Box flex="1" background="box" />
+        <Box flex="10" background="box" flexDirection="column" alignItems="center" gap="1">
+          <Box flex="2" alignVertical="center" alignHorizontal="center">
+            <Heading>
+              <Text size="18">@LookUp Analyzer</Text>
+            </Heading>
+          </Box>
+          <Box flex="10" background="box" alignItems="center" flexDirection="column" gap="1">
+            <VStack gap="1" marginLeft="10" marginRight="10">
+              <Text size="14" align="left">Param: {param}</Text>
+              <Text size="14" align="left">Type: {type}</Text>
+              <Spacer size="24" />
+              <Text size="14" align="left">{description}</Text>
+            </VStack>
+          </Box>
+        </Box>
+        <Box flex="1" background="box" />
+      </Box>
+      <Box flex="4" background="box" flexDirection="column" height="100%" alignVertical="center" gap="1" backgroundColor="border">
+        <Box flex="1" background="box" />
+        <Box flex="10" backgroundColor={`${network == "base" ? "base" : network === "optimism" ? "optimism" : "arbitrum"}`} />
+        <Box flex="1" background="box" />
+      </Box>
+      <Box flex="1" background="box" />
+    </Box>
+  }
+    
+  )
+})
 
 devtools(app, { serveStatic })
 
