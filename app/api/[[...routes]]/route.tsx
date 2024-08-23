@@ -25,6 +25,7 @@ const app = new Frog({
   assetsPath: '/',
   basePath: '/api',
   ui: { vars },
+  origin: process.env.NEXT_PUBLIC_APP_URL,
   imageOptions: {
     format: 'png',
   },
