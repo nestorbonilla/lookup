@@ -201,7 +201,7 @@ switch (paramTypevalue) {
             <Button className="w-full" onClick={() => {
               postComposerCreateCastActionMessage({
                 text: `${frameText}`,
-                embeds: [`${process.env.NEXT_PUBLIC_APP_URL}/api/frame-analyze/${networkValue}/${paramTypevalue}/${param}`]
+                embeds: [`${process.env.NEXT_PUBLIC_APP_URL}/api/scan/${networkValue}/${paramTypevalue}/${param}`]
               })}
             }>LookUp</Button>
           </CardFooter>

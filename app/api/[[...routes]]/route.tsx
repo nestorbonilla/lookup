@@ -117,16 +117,16 @@ app.hono.post('/hook-analyze', async (c) => {
     }
     
     switch (paramType) {
-      case 'eoa-address':
+      case 'eoa':
         castText = `Here's some data about this External Owned Account (EOA):`;
         break;
-      case 'contract-address':
+      case 'contract':
         castText = `Here's some data about this Contract Address:`;
         break;
-      case 'tx-hash':
+      case 'tx':
         castText = `Here's some data about this Transaction:`;
         break;
-      case 'ens-name':
+      case 'ens':
         castText = `Here's some data about this ENS name:`;
         break;
       default:
@@ -164,7 +164,7 @@ app.hono.post('/hook-analyze', async (c) => {
 });
 
 app.frame(
-  '/frame-analyze/:network/:paramType/:parameter',
+  '/scan/:network/:paramType/:parameter',
   neynarMiddleware,
   async (c: FrameContext) => {
     const { buttonValue, status, req } = c;
@@ -175,7 +175,6 @@ app.frame(
     let networkId = getNetworkId(network!);
     let frameText = '';
     let dynamicIntents: any[] = [];
-    let balance = BigInt(0);
 
     // Get the channel access rules
     if (
@@ -271,7 +270,7 @@ app.frame(
                   <Text size="14" align="left">Param: {parameter}</Text>
                   <Text size="14" align="left">Type: {paramType}</Text>
                   <Spacer size="24" />
-                  <Text size="14" align="left">{frameText}</Text>  
+                  <Text size="14" align="left">{frameText}</Text>
                 </VStack>                
               </Box>
             </Box>
@@ -279,9 +278,7 @@ app.frame(
           </Box>
           <Box flex="4" background="box" flexDirection="column" height="100%" alignVertical="center" gap="1" backgroundColor="border">
             <Box flex="1" background="box" />
-            <Box flex="10" backgroundColor={`${network == "base" ? "base" : network === "optimism" ? "optimism" : "arbitrum"}`}>
-              {/* <Text size="14" color="white" align="right">{network}</Text> */}
-            </Box>
+            <Box flex="10" backgroundColor={`${network == "base" ? "base" : network === "optimism" ? "optimism" : "arbitrum"}`} />
             <Box flex="1" background="box" />
           </Box>
           <Box flex="1" background="box" />
