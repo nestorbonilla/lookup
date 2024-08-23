@@ -9,8 +9,8 @@ export const getNetworkId = (network: string) => {
     case 'arbitrum':
       return 'arbitrum-mainnet';
     default:
-      console.log(`Unsupported network: ${network}`);
-      return null;
+      // console.log(`Unsupported network: ${network}`);
+      return 'base-mainnet';
   }
 };
 
