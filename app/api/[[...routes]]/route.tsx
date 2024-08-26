@@ -25,7 +25,6 @@ const app = new Frog({
   assetsPath: '/',
   basePath: '/api',
   ui: { vars },
-  origin: process.env.NEXT_PUBLIC_APP_URL,
   imageOptions: {
     format: 'png',
   },
@@ -181,7 +180,7 @@ app.frame(
       status == 'initial' ||
       (status == 'response' && buttonValue == 'done')
     ) {
-      frameText = `Let's verify some details.`;
+      frameText = `Verify some details.`;
       dynamicIntents = [<Button value='verify'>go</Button>];
     } else if (status == 'response') {
       const payload = await req.json();
