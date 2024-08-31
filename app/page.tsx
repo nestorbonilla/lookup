@@ -90,6 +90,18 @@ export default function Home() {
       break;
   }
   
+  const getButtonText = (type: string) => {
+    if (!type) return 'LookUp';
+    
+    switch (type.toLowerCase()) {
+      case 'eoa':
+      case 'ens':
+        return `LookUp ${type.toUpperCase()}`;
+      default:
+        return `LookUp ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+    }
+  };
+  
   return (
     <main className="flex min-h-screen flex-col items-center justify-center">
       <div>
@@ -141,10 +153,16 @@ export default function Home() {
                 })}
               }
             >
-              {paramType ? `LookUp ${paramType.toUpperCase()}` : 'LookUp'}
+              {getButtonText(paramType)}
             </Button>
           </CardFooter>
         </Card>
+        <div className="flex flex-col items-center mt-4 text-gray-500">
+          <p className="text-sm italic mb-2">
+            This product is intended to work as a Farcaster Action.
+          </p>
+          <Icons.farcaster className="h-8 w-8" />
+        </div>
       </div>
     </main>
   )

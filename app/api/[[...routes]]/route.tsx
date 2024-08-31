@@ -92,7 +92,7 @@ app.composerAction(
     name: 'LookUp Composer Action',
     description: 'Check details of an EOA, Contract, Transaction, or ENS name',
     icon: 'image',
-    imageUrl: `${process.env.NEXT_PUBLIC_APP_URL}/logo-light.svg`,
+    imageUrl: `${process.env.NEXT_PUBLIC_APP_URL}/logo.svg`,
   }
 );
 
