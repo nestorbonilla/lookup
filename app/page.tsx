@@ -5,92 +5,96 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from "@/lib/utils"
-import { Check, ChevronsUpDown } from "lucide-react"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import Image from 'next/image'
+import { Icons } from '@/components/icons'
+import { isAddress } from 'viem'
+import { getEthCode, getNetworkId } from '@/app/utis/chainbase/constants';
 
 const networks = [
   {
+    value: "ethereum",
+    label: "Ethereum",
+    icon: <Icons.ethereum className="h-14 w-14"/>,
+  },
+  {
     value: "base",
     label: "Base",
+    icon: <Icons.base className="h-14 w-14"/>,
   },
   {
     value: "optimism",
     label: "Optimism",
+    icon: <Icons.optimism className="h-14 w-14"/>,
   },
   {
     value: "arbitrum",
     label: "Arbitrum",
+    icon: <Icons.arbitrumOne className="h-14 w-14"/>,
   }
 ];
 
-const paramTypes = [
-  {
-    value: "eoa",
-    label: "EOA",
-  },
-  {
-    value: "contract",
-    label: "Contract Address",
-  },
-  {
-    value: "ens",
-    label: "ENS Name",
-  },
-  {
-    value: "tx",
-    label: "Transaction Hash",
-  }
-];
-
-export default function Home() { 
-  
-  const [networkOpen, setNetworkOpen] = useState(false)
-  const [networkValue, setNetworkValue] = useState("")
-  
-  const [paramTypeOpen, setParamTypeOpen] = useState(false)
-  const [paramTypevalue, setParamTypeValue] = useState("")
-  
+export default function Home() {
+  const [network, setNetwork] = useState("")
+  const [paramType, setParamType] = useState("")
   const [param, setParam] = useState("");
   
-  let frameText = '';
+  useEffect(() => {
+    const identifyParamType = async () => {
+      if (!network || !param) {
+        setParamType('');
+        return;
+      }
 
-switch (paramTypevalue) {
+      try {
+        if (param.endsWith('.eth')) {
+          setParamType('ens');
+        } else if (param.startsWith('0x')) {
+          if (param.length === 66) {
+            setParamType('tx');
+          } else if (isAddress(param)) {
+            const chainbaseNetwork = getNetworkId(network);
+            const code = await getEthCode(param, chainbaseNetwork);
+            setParamType(code === '0x' ? 'eoa' : 'contract');
+          } else {
+            setParamType('');
+          }
+        } else {
+          setParamType('');
+        }
+      } catch (error) {
+        console.error("Error identifying param type:", error);
+        setParamType('');
+      }
+    };
+
+    identifyParamType();
+  }, [param, network]);
+
+  let frameText = '';
+  switch (paramType) {
     case 'eoa':
-        frameText = `The details of the EOA ${param} on ${networkValue} network are:`;
-        break;
+      frameText = `The details of the EOA ${param} on ${network} network are:`;
+      break;
     case 'contract':
-        frameText = `The details of the contract ${param} on ${networkValue} network are:`;
-        break;
+      frameText = `The details of the contract ${param} on ${network} network are:`;
+      break;
     case 'tx':
-        frameText = `The details of the transaction ${param} on ${networkValue} network are:`;
-        break;
+      frameText = `The details of the transaction ${param} on ${network} network are:`;
+      break;
     case 'ens':
-        frameText = `The details of the ENS ${param} on ${networkValue} network are:`;
-        break;
+      frameText = `The details of the ENS ${param} on ${network} network are:`;
+      break;
     default:
-        frameText = 'Invalid parameter type.'; // Handle unexpected cases
-        break;
-}
+      frameText = 'Invalid parameter type.';
+      break;
+  }
   
   return (
     <main className="flex min-h-screen flex-col items-center justify-center">
       <div>
         <div className="flex flex-col items-center m-3">
-          <Image src="/logo-light.svg" alt="LookUp logo" width={100} height={100} />          
+          <Icons.logo className="h-28 w-28"/>
         </div>
         <Card className="w-screen max-w-md">
           <CardHeader className='flex flex-col items-center'>
@@ -99,111 +103,46 @@ switch (paramTypevalue) {
           </CardHeader>
           <CardContent className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Network</Label>
-              <Popover open={networkOpen} onOpenChange={setNetworkOpen}>
-                <PopoverTrigger asChild>
+              <Label htmlFor="network">Network</Label>
+              <div className="grid grid-cols-4 gap-2">
+                {networks.map((currentNetwork) => (
                   <Button
+                    key={currentNetwork.value}
                     variant="outline"
-                    role="combobox"
-                    aria-expanded={networkOpen}
-                    className="w-full justify-between"
+                    className={cn(
+                      "p-2 w-20 h-20 flex items-center justify-center",
+                      network === currentNetwork.value && "bg-gray-300"
+                    )}
+                    onClick={() => setNetwork(currentNetwork.value)}
                   >
-                    {networkValue
-                      ? networks.find((network) => network.value === networkValue)?.label
-                      : "Select Network..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    {currentNetwork.icon}
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[200px] p-0">
-                  <Command>
-                    <CommandList>
-                      <CommandEmpty>No network found.</CommandEmpty>
-                      <CommandGroup>
-                        {networks.map((network) => (
-                          <CommandItem
-                            key={network.value}
-                            value={network.value}
-                            onSelect={(currentValue) => {
-                              setNetworkValue(currentValue === networkValue ? "" : currentValue)
-                              setNetworkOpen(false)
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                networkValue === network.value ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {network.label}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Param Type</Label>
-              <Popover open={paramTypeOpen} onOpenChange={setParamTypeOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={paramTypeOpen}
-                    className="w-full justify-between"
-                  >
-                    {paramTypevalue
-                      ? paramTypes.find((paramType) => paramType.value === paramTypevalue)?.label
-                      : "Select Param Type..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[200px] p-0">
-                  <Command>
-                    <CommandList>
-                      <CommandEmpty>No param type found.</CommandEmpty>
-                      <CommandGroup>
-                        {paramTypes.map((paramType) => (
-                          <CommandItem
-                            key={paramType.value}
-                            value={paramType.value}
-                            onSelect={(currentValue) => {
-                              setParamTypeValue(currentValue === paramTypevalue ? "" : currentValue)
-                              setParamTypeOpen(false)
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                paramTypevalue === paramType.value ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {paramType.label}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+                ))}
+              </div>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="param">Parameter</Label>
               <Input
                 id="param"
                 value={param} 
-                onChange={(event) => setParam(event.target.value)}
+                onChange={(event) => setParam(event.target.value)} 
+                disabled={!network}
                 required />
             </div>
           </CardContent>
           <CardFooter>
-            <Button className="w-full" onClick={() => {
-              postComposerCreateCastActionMessage({
-                text: `${frameText}`,
-                embeds: [`${process.env.NEXT_PUBLIC_APP_URL}/api/scan/${networkValue}/${paramTypevalue}/${param}`]
-              })}
-            }>LookUp</Button>
+            <Button 
+              className="w-full" 
+              disabled={!paramType || !network}
+              onClick={() => {
+                postComposerCreateCastActionMessage({
+                  text: `${frameText}`,
+                  embeds: [`${process.env.NEXT_PUBLIC_APP_URL}/api/scan/${network}/${paramType}/${param}`]
+                })}
+              }
+            >
+              {paramType ? `LookUp ${paramType.toUpperCase()}` : 'LookUp'}
+            </Button>
           </CardFooter>
         </Card>
       </div>

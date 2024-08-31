@@ -2,6 +2,8 @@ import { hexToNumber, formatEther } from 'viem';
 
 export const getNetworkId = (network: string) => {
   switch (network) {
+    case 'ethereum':
+      return 'ethereum-mainnet';
     case 'base':
       return 'base-mainnet';
     case 'optimism':
@@ -9,8 +11,7 @@ export const getNetworkId = (network: string) => {
     case 'arbitrum':
       return 'arbitrum-mainnet';
     default:
-      // console.log(`Unsupported network: ${network}`);
-      return 'base-mainnet';
+      return 'ethereum-mainnet';
   }
 };
 
@@ -18,7 +19,7 @@ export const getEthCode = async (
   address: string,
   network: string
 ): Promise<string | null> => {
-  const chainbaseUrl = `https://${network}.s.chainbase.online/v1/${process.env.CHAINBASE_API_KEY}`;
+  const chainbaseUrl = `https://${network}.s.chainbase.online/v1/${process.env.NEXT_PUBLIC_CHAINBASE_API_KEY}`;
   const options = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
