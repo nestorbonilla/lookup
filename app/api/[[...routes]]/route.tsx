@@ -11,9 +11,13 @@ import {
   Cast,
   ValidateFrameActionResponse,
 } from '@neynar/nodejs-sdk/build/neynar-api/v2';
-import { isAddress } from 'viem';
-import { getBalance, getEthCode, getNetworkId, getQueryResults, QueryResult } from '@/app/utis/chainbase/constants';
+import { createPublicClient, http, isAddress } from 'viem';
+import { base, arbitrum } from "viem/chains";
+import { getBalance, getNetworkId, getQueryResults, QueryResult } from '@/app/utis/chainbase/constants';
 import { getEnsAddress } from '@/app/utis/viem/constants';
+import { getAvatar } from '@coinbase/onchainkit/identity';
+import { normalize } from 'viem/ens';
+import { fetchEthCode } from '@/app/actions/chainbase';
 
 interface AnalysisResult {
   valid: boolean;
@@ -90,7 +94,7 @@ app.composerAction(
   },
   {
     name: 'LookUp Composer Action',
-    description: 'Check details of an EOA, Contract, Transaction, or ENS name',
+    description: 'Check details of an EOA, Contract, Transaction, ENS or Basename',
     icon: 'image',
     imageUrl: `${process.env.NEXT_PUBLIC_APP_URL}/logo.svg`,
   }
@@ -127,6 +131,9 @@ app.hono.post('/hook-analyze', async (c) => {
         break;
       case 'ens':
         castText = `Here's some data about this ENS name:`;
+        break;
+      case 'basename':
+        castText = `Here's some data about this Basename:`;
         break;
       default:
         break;
@@ -220,22 +227,36 @@ app.frame(
         switch (paramType) {
           case 'eoa':
             balance = await getBalance(parameter!, networkId!);
-            result = await getQueryResults('690032', parameter!);
+            result = await getQueryResults('690032', network!, parameter!);
             frameText = `Its balance is ${balance} ETH, it has ${result?.txCount} txs, and the last one was ${result?.lastTxTimestamp}`;
             break;
           case 'contract':
-            result = await getQueryResults('690033', parameter!);
+            result = await getQueryResults('690033', network!, parameter!);
             frameText = `This is an ${result?.isErc20 ? 'ERC20' : result?.isErc721 ? 'ERC721' : 'Custom'} contract. It has ${result?.txCount} transactions, and was deployed from ${result?.fromAddress} at ${result?.blockTimestamp}.`;
             break;
           case 'tx':
-            result = await getQueryResults('690035', parameter!);
+            result = await getQueryResults('690035', network!, parameter!);
             frameText = `This transaction with hash ${result?.hash} was an interaction from ${result?.fromAddress} to ${result?.toAddress} that used ${result?.gas} gas and transferred ${result?.value} wei. It was mined at ${result?.blockTimestamp}.`;
             break;
           case 'ens':
             paramAddress = await getEnsAddress(parameter!);
             balance = await getBalance(paramAddress!, networkId!);
-            result = await getQueryResults('690032', paramAddress!);
+            result = await getQueryResults('690032', network!, paramAddress!);
             frameText = `The balance of this ENS is ${balance}, it has ${result?.txCount} transactions, and the last one was ${result?.lastTxTimestamp}`;
+            break;
+          case 'basename':
+            const client = createPublicClient({
+              chain: base,
+              transport: http(),
+            });
+            const basenameL2Resolver = process.env.NEXT_PUBLIC_BASENAME_L2_RESOLVER! as `0x${string}`;
+            paramAddress = await client.getEnsAddress({
+              name: normalize(parameter!),
+              universalResolverAddress: basenameL2Resolver,
+            });
+            balance = await getBalance(paramAddress!, networkId!);
+            result = await getQueryResults('690032', network!, paramAddress!);
+            frameText = `The balance of this Basename is ${balance}, it has ${result?.txCount} transactions, and the last one was ${result?.lastTxTimestamp}`;
             break;
           default:
             break;
@@ -278,7 +299,7 @@ const isAnalyzeCast = async (command: string, param: string, network: string): P
         if (param.length === 66) {
           return { valid: false, paramType: 'tx' };
         } else if (isAddress(param)) {
-          const code = await getEthCode(param, network);
+          const code = await fetchEthCode(param, network);
           return { 
             valid: code !== '0x', 
             paramType: code === '0x' ? 'eoa' : 'contract' 

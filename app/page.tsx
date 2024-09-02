@@ -9,7 +9,8 @@ import { useState, useEffect } from 'react'
 import { cn } from "@/lib/utils"
 import { Icons } from '@/components/icons'
 import { isAddress } from 'viem'
-import { getEthCode, getNetworkId } from '@/app/utis/chainbase/constants';
+import { getNetworkId } from '@/app/utis/chainbase/constants';
+import { fetchEthCode } from './actions/chainbase'
 
 const networks = [
   {
@@ -47,14 +48,16 @@ export default function Home() {
       }
 
       try {
-        if (param.endsWith('.eth')) {
+        if (param.endsWith('.base.eth')) {
+          setParamType('basename');
+        } else if (param.endsWith('.eth')) {
           setParamType('ens');
         } else if (param.startsWith('0x')) {
           if (param.length === 66) {
             setParamType('tx');
           } else if (isAddress(param)) {
             const chainbaseNetwork = getNetworkId(network);
-            const code = await getEthCode(param, chainbaseNetwork);
+            const code = await fetchEthCode(param, chainbaseNetwork);
             setParamType(code === '0x' ? 'eoa' : 'contract');
           } else {
             setParamType('');
@@ -83,7 +86,10 @@ export default function Home() {
       frameText = `The details of the transaction ${param} on ${network} network are:`;
       break;
     case 'ens':
-      frameText = `The details of the ENS ${param} on ${network} network are:`;
+        frameText = `The details of the ENS ${param} on ${network} network are:`;
+        break;
+    case 'basename':
+      frameText = `The details of the Basename ${param} on ${network} network are:`;
       break;
     default:
       frameText = 'Invalid parameter type.';
@@ -111,7 +117,7 @@ export default function Home() {
         <Card className="w-screen max-w-md">
           <CardHeader className='flex flex-col items-center'>
             <CardTitle className="text-2xl">LookUp Analyzer</CardTitle>
-            <CardDescription>Lookup an EOA, contract, tx or ENS on any EVM network. This project works as a Farcaster Composer Action.</CardDescription>
+            <CardDescription>Lookup an EOA, contract, tx, ENS or Basename on many EVM network.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
             <div className="grid gap-2">

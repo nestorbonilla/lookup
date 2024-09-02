@@ -15,38 +15,6 @@ export const getNetworkId = (network: string) => {
   }
 };
 
-export const getEthCode = async (
-  address: string,
-  network: string
-): Promise<string | null> => {
-  const chainbaseUrl = `https://${network}.s.chainbase.online/v1/${process.env.NEXT_PUBLIC_CHAINBASE_API_KEY}`;
-  const options = {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      id: 1,
-      jsonrpc: '2.0',
-      method: 'eth_getCode',
-      params: [address, 'latest']
-    })
-  };
-
-  try {
-    const response = await fetch(chainbaseUrl, options);
-    const data = await response.json();
-
-    if (data.error) {
-      console.error(`Error fetching code for address ${address}:`, data.error);
-      return null;
-    }
-
-    return data.result;
-  } catch (err) {
-    console.error(`Error fetching code for address ${address}:`, err);
-    return null;
-  }
-};
-
 export const getBalance = async (
   address: string,
   network: string
@@ -164,12 +132,14 @@ export type QueryResult = {
 
 export const getQueryResults = async (
   queryId: string,
-  address: string
+  network: string,
+  address: string,
 ): Promise<QueryResult | null> => {
   const apiKey = process.env.CHAINBASE_API_KEY || "";
   const data = {
     queryParameters: {
-      param_address: address
+      network,
+      address,
     },
   };
   const headers = {
