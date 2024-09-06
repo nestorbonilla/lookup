@@ -15,6 +15,21 @@ export const getNetworkId = (network: string) => {
   }
 };
 
+export const getNetworkIdNumber = (network: string) => {
+  switch (network) {
+    case 'ethereum':
+      return 1;
+    case 'base':
+      return 8453;
+    case 'optimism':
+      return 10;
+    case 'arbitrum':
+      return 42161;
+    default:
+      return 1;
+  }
+};
+
 export const getBalance = async (
   address: string,
   network: string
@@ -121,6 +136,7 @@ export type QueryResult = {
   blockTimestamp?: string;
   // contract params
   address?: string;
+  bytecode?: string;
   isErc20?: number;
   isErc721?: number;
   // address params
@@ -207,7 +223,8 @@ export const getQueryResults = async (
             blockTimestamp: resultData[3] as string,
             isErc20: resultData[4] as number,
             isErc721: resultData[5] as number,
-            txCount: resultData[6] as number
+            bytecode: resultData[6] as string,
+            txCount: resultData[7] as number,
           };
         case "690035":
           return {
@@ -228,6 +245,122 @@ export const getQueryResults = async (
     }
   } catch (err) {
     console.error(`Error executing query for address ${address}:`, err);
+    return null;
+  }
+};
+
+export const getTokenInfo = async (
+  address: string,
+  network: string,
+  isErc721: boolean,
+  isErc20: boolean
+): Promise<{
+  name: string;
+  totalSupply: string;
+  decimals: number;
+  tokenCount: string;
+  deployedBy: string;
+  compilerVersion: string;
+} | null> => {
+  const networkId = getNetworkIdNumber(network);
+  const options = {
+    method: 'GET',
+    headers: { 'x-api-key': process.env.CHAINBASE_API_KEY! }
+  };
+
+  try {
+    let name = '';
+    let totalSupply = '';
+    let decimals = 0;
+    let tokenCount = '';
+    let deployedBy = '';
+    let compilerVersion = '';
+
+    if (isErc721) {
+      const response = await fetch(`https://api.chainbase.online/v1/nft/collection?chain_id=${networkId}&contract_address=${address}`, options);
+      const nftData = await response.json();
+      
+      if (nftData.data) {
+        name = nftData.data.name;
+        totalSupply = nftData.data.total_supply || '';
+        tokenCount = totalSupply;
+      }
+    } else if (isErc20) {
+      const response = await fetch(`https://api.chainbase.online/v1/token/metadata?chain_id=${networkId}&contract_address=${address}`, options);
+      const tokenData = await response.json();
+
+      if (tokenData.data) {
+        name = tokenData.data.name;
+        totalSupply = tokenData.data.total_supply;
+        decimals = tokenData.data.decimals;
+        tokenCount = (Number(totalSupply) / (10 ** decimals)).toString();
+      }
+    }
+
+    return { name, totalSupply, decimals, tokenCount, deployedBy, compilerVersion };
+  } catch (err) {
+    console.error(`Error fetching token info for address ${address}:`, err);
+    return null;
+  }
+};
+
+export const getTxDetails = async (
+  txHash: string,
+  network: string
+): Promise<{
+  sender: string;
+  receiver: string;
+  dateTime: string;
+  amountSent: string;
+  gasFee: string;
+  status: string;
+  txHash: string;
+  gasUsed: string;
+} | null> => {
+  const networkId = getNetworkIdNumber(network);
+  const options = {
+    method: 'GET',
+    headers: { 'x-api-key': process.env.CHAINBASE_API_KEY! }
+  };
+
+  try {
+    const url = `https://api.chainbase.online/v1/tx/detail?chain_id=${networkId}&hash=${txHash}`;
+    console.log(`Fetching transaction details from: ${url}`);
+    
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      console.error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`Error response: ${errorText}`);
+      return null;
+    }
+    
+    const data = await response.json();
+    console.log('API Response:', JSON.stringify(data, null, 2));
+
+    if (data.code !== 0 || !data.data) {
+      console.error(`API error for hash ${txHash}:`, data.message || 'Unknown error');
+      return null;
+    }
+
+    const txData = data.data;
+
+    const valueInEther = txData.value === '0' ? '0.0000' : formatEther(BigInt(txData.value));
+    const gasFeeInEther = formatEther(BigInt(txData.tx_fee));
+    const gasUsed = txData.gas_used.toString();
+
+    return {
+      sender: txData.from_address,
+      receiver: txData.to_address,
+      dateTime: new Date(txData.block_timestamp).toLocaleString(),
+      amountSent: `${valueInEther} ETH`,
+      gasFee: `${gasFeeInEther} ETH`,
+      status: txData.status === 1 ? 'Success' : 'Failed',
+      txHash: txData.transaction_hash,
+      gasUsed
+    };
+  } catch (err) {
+    console.error(`Error fetching transaction details for hash ${txHash}:`, err);
     return null;
   }
 };

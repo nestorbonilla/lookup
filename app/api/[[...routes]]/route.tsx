@@ -12,10 +12,9 @@ import {
   ValidateFrameActionResponse,
 } from '@neynar/nodejs-sdk/build/neynar-api/v2';
 import { createPublicClient, http, isAddress } from 'viem';
-import { base, arbitrum } from "viem/chains";
-import { getBalance, getNetworkId, getQueryResults, QueryResult } from '@/app/utis/chainbase/constants';
-import { getEnsAddress } from '@/app/utis/viem/constants';
-import { getAvatar } from '@coinbase/onchainkit/identity';
+import { base } from "viem/chains";
+import { getBalance, getNetworkId, getQueryResults, getTokenInfo, getTxDetails, QueryResult } from '@/app/utis/chainbase/constants';
+import { getCompilerVersion, getEnsAddress } from '@/app/utis/viem/constants';
 import { normalize } from 'viem/ens';
 import { fetchEthCode } from '@/app/actions/chainbase';
 
@@ -232,11 +231,30 @@ app.frame(
             break;
           case 'contract':
             result = await getQueryResults('690033', network!, parameter!);
-            frameText = `This is an ${result?.isErc20 ? 'ERC20' : result?.isErc721 ? 'ERC721' : 'Custom'} contract. It has ${result?.txCount} transactions, and was deployed from ${result?.fromAddress} at ${result?.blockTimestamp}.`;
+            const compilerVersion = getCompilerVersion(result?.bytecode!);
+            const tokenInfo = await getTokenInfo(parameter!, networkId!, result?.isErc721 === 1, result?.isErc20 === 1);
+
+            frameText = `${tokenInfo?.name || 'This'} is an ${result?.isErc20 ? 'ERC20' : result?.isErc721 ? 'ERC721' : 'Custom'} contract with ${tokenInfo?.tokenCount || 'unknown'} tokens. It has ${result?.txCount} txs, deployed from ${result?.fromAddress} at ${result?.blockTimestamp}. Compiler: ${compilerVersion}.`;
             break;
           case 'tx':
-            result = await getQueryResults('690035', network!, parameter!);
-            frameText = `This transaction with hash ${result?.hash} was an interaction from ${result?.fromAddress} to ${result?.toAddress} that used ${result?.gas} gas and transferred ${result?.value} wei. It was mined at ${result?.blockTimestamp}.`;
+            console.log(`Processing transaction with hash: ${parameter}, network: ${network}`);
+            const txDetails = await getTxDetails(parameter!, network!);
+            if (txDetails) {
+              frameText = `Tx on ${network!.charAt(0).toUpperCase() + network!.slice(1)} (${txDetails.status}): `;
+              const shortFrom = `${txDetails.sender.slice(0, 6)}...${txDetails.sender.slice(-4)}`;
+              const shortTo = `${txDetails.receiver.slice(0, 6)}...${txDetails.receiver.slice(-4)}`;
+
+              if (txDetails.amountSent === '0.0000 ETH') {
+                
+                  frameText += `Tx between ${shortFrom} and ${shortTo} `;
+              } else {
+                  frameText += `${txDetails.amountSent} sent to ${shortTo}. `;
+              }
+      
+              frameText += `Gas used: ${txDetails.gasUsed} units.`;
+            } else {
+                frameText = "Unable to fetch tx details. Check hash and network.";
+            }
             break;
           case 'ens':
             paramAddress = await getEnsAddress(parameter!);
@@ -320,6 +338,10 @@ app.image('/img/:network/:type/:param/:description', (c) => {
   const network = c.req.param('network');
   const type = c.req.param('type');
   const param = c.req.param('param');
+  const shortenedHash = param!.length > 42 
+      ? `${param!.slice(0, 6)}...${param!.slice(-4)}`
+      : param;
+
   const description = c.req.param('description');
   return c.res({
     headers: {
@@ -338,7 +360,7 @@ app.image('/img/:network/:type/:param/:description', (c) => {
           </Box>
           <Box flex="10" background="box" alignItems="center" flexDirection="column" gap="1">
             <VStack gap="1" marginLeft="10" marginRight="10">
-              <Text size="14" align="left">Param: {param}</Text>
+              <Text size="14" align="left">Param: {shortenedHash}</Text>
               <Text size="14" align="left">Type: {type}</Text>
               <Spacer size="24" />
               <Text size="14" align="left">{description}</Text>
